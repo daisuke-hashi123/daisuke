@@ -1,0 +1,938 @@
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, User, Building, BarChart3, BookOpen, Target, CheckCircle, Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight, Star, Award, TrendingUp } from 'lucide-react';
+
+// データ定義
+const CATEGORIES = [
+  { id: 'money', name: 'お金', items: ['20代で年収800万円以上', '定年まで年収が上がり続ける', '30代で平均年収が安定的に稼げる', '20代で年収500～600万円', '収入＝価値提供の大きさ'] },
+  { id: 'status', name: '社会的地位', items: ['安定した経営基盤がある上場企業', '誰もが名前を知っている有名企業', '尊敬している人から認められる企業', '早くからポジションを任せられる企業', '急成長中で将来が期待されている企業'] },
+  { id: 'stability', name: '安定', items: ['生活に十分な収入と時間が確保できる', '1つの会社で長く勤めることができる', 'スキルが身につけられる', '1人でも生きられる力を身につけられる', '事業や業務内容の変化が小さい'] },
+  { id: 'environment', name: '働く環境', items: ['自分の強みが活かせる', '好きな時間に好きな場所で働ける', '自分が組織内の上位に入れること', '自分より優秀な人が組織に多くいること', '職場の人間関係がよい環境', '海外との接点を持てる環境', '様々な価値観をもつ人と関われる', 'フラットに意見を発信することができる'] },
+  { id: 'health', name: '健康', items: ['メンタルを安定させて働けること', 'ハードワークではない', '心身ともに健康的に働けること'] },
+  { id: 'vision', name: 'ビジョン', items: ['経営陣や先輩に憧れとなる人がいる', '会社の方向性と自分の価値観が合う', '夢を実現する手段として適している'] },
+  { id: 'experience', name: '体験', items: ['唯一無二のビジネスモデルやサービス', '様々な挑戦ができる', '好きなことを仕事にできる', '会社の掲げているビジョンが面白い', 'お客様と直接的に関わることができる'] },
+  { id: 'teamwork', name: '仲間', items: ['仕事に対して熱量が高い仲間が多い', '自分よりも優秀だと思える人が多くいる', 'お互いに刺激し合える仲間がいる', 'チームワークを大事にして仕事ができる', '「この人に相談したい」と思う人がいる'] },
+  { id: 'support', name: '支援', items: ['マイナスの状態をプラスにする支援', '頑張ってるが上手くいってない人の支援', '上手くいっている人をさらに前に進める', '社内・社外問わず関わる人に貢献する', '積極的にCSR活動に取り組んでいる'] },
+  { id: 'growth', name: '成長', items: ['自分の強みを磨きながら活かせる', '新しいことへの挑戦の機会が多い', 'できないことができるようになる', 'どこででも活躍できる人材になる'] },
+  { id: 'innovation', name: '革新', items: ['いずれかの業界の構造を変える', '世の中に影響を与える', '良いものを多くの人に知ってもらう', '人が変化するきっかけを与える'] },
+  { id: 'creation', name: '創造', items: ['サービスの企画から関わることができる', '思考力・発想力が問われる業務が中心', '0→1の事業開発に関わることができる', '有形のものづくりに関わることができる'] },
+  { id: 'curiosity', name: '知的好奇心', items: ['常に最先端のトレンドを追っている', '様々な分野の知識を得やすい環境', '市場環境の変化が目まぐるしいビジネス'] },
+  { id: 'private', name: 'プライベート', items: ['休みが取りやすく、残業が少ない', '産休や育休などの制度が充実している', '家賃補助や各種手当が充実している'] }
+];
+
+const REASONS = [
+  '自信を持つため', '自由に働くため（時間・場所など）', 'やりがいをもって働くため', '仕事を楽しむため', '人生を楽しむため', '成し遂げたい夢があるため', '将来的に起業するため', '理想の自分になるため', '親孝行のため', '幸せな家庭を築くため', 'お客様に誠実に向き合うため', '社会貢献するため', '組織貢献するため', '他者貢献するため', '活躍できている実感を得るため', '社会（第三者）から認められるため', '親や友人から認められるため', '規模の大きなことに関わるため', '大きな影響力をもつため', '仲間とともに成長するため', 'どこででも活躍できるようになるため', '最大のパフォーマンスを発揮するため', '自分自身が成長するため', '不自由のない生活をするため', '裕福な暮らしをするため', '安心感を得るため', '自分が好きな場所に住むため', 'プライベートを充実させるため', '健康的な生活をするため', '様々な価値観に触れるため', '幅広い経験を積むため', '刺激を得るため', '世の中の真理を追求するため', '自分自身の選択肢を広げるため'
+];
+
+const EPISODES = [
+  { id: 1, title: '一番頑張ったエピソード', description: '自分が今までの人生で最も頑張ったエピソードを記入してください。' },
+  { id: 2, title: '家庭環境', description: 'ご自身の家庭環境について記入してください。' },
+  { id: 3, title: '影響を受けた人物とその理由', description: '影響を受けた人物と、その理由について記入してください。' },
+  { id: 4, title: '最も失敗した経験', description: '今までの人生で最も失敗した経験について記入してください。' },
+  { id: 5, title: '一番嬉しかったこと', description: '今までの人生で最も嬉しかった経験について記入してください。' },
+  { id: 6, title: '一番辛かったこと', description: '今までの人生で最も辛かった経験について記入してください。' },
+  { id: 7, title: '人生で一番の決断とその理由', description: '今までの人生で一番大きな決断とその理由について記入してください。' }
+];
+
+// メインアプリケーション
+const SelfAnalysisApp = () => {
+  const [currentScreen, setCurrentScreen] = useState('login');
+  const [user, setUser] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categoryDetails, setCategoryDetails] = useState({});
+  const [importanceWeights, setImportanceWeights] = useState({});
+  const [episodes, setEpisodes] = useState({});
+  const [episodeCategories, setEpisodeCategories] = useState({});
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({ email: '', password: '', university: '', confirmPassword: '' });
+  const [consistencyCheck, setConsistencyCheck] = useState(null);
+
+  // ログイン処理
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginForm.email && loginForm.password) {
+      setUser({ 
+        email: loginForm.email, 
+        university: '○○大学',
+        progress: 0
+      });
+      setCurrentScreen('dashboard');
+    }
+  };
+
+  // 新規登録処理
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (registerForm.email && registerForm.password && registerForm.university && 
+        registerForm.password === registerForm.confirmPassword) {
+      setUser({ 
+        email: registerForm.email, 
+        university: registerForm.university,
+        progress: 0
+      });
+      setCurrentScreen('dashboard');
+    }
+  };
+
+  // カテゴリ選択処理
+  const handleCategorySelect = (categoryId) => {
+    if (selectedCategories.includes(categoryId)) {
+      setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
+    } else if (selectedCategories.length < 5) {
+      setSelectedCategories([...selectedCategories, categoryId]);
+    }
+  };
+
+  // 詳細選択処理
+  const handleDetailSelect = (categoryId, detail, reason) => {
+    setCategoryDetails({
+      ...categoryDetails,
+      [categoryId]: { detail, reason }
+    });
+  };
+
+  // 重要度設定処理
+  const handleImportanceChange = (categoryId, value) => {
+    const newWeights = { ...importanceWeights, [categoryId]: value };
+    const total = Object.values(newWeights).reduce((sum, weight) => sum + weight, 0);
+    
+    if (total <= 100) {
+      setImportanceWeights(newWeights);
+    }
+  };
+
+  // エピソード入力処理
+  const handleEpisodeChange = (episodeId, content) => {
+    setEpisodes({
+      ...episodes,
+      [episodeId]: content
+    });
+  };
+
+  // エピソードとカテゴリの紐づけ
+  const handleEpisodeCategoryLink = (episodeId, categoryId) => {
+    setEpisodeCategories({
+      ...episodeCategories,
+      [episodeId]: categoryId
+    });
+  };
+
+  // 整合性チェック
+  const performConsistencyCheck = () => {
+    if (selectedCategories.includes('money') && selectedCategories.includes('stability')) {
+      setConsistencyCheck({
+        question: '以下の2つの選択肢のうち、どちらがより重要ですか？',
+        optionA: 'お金は稼げるが安定していない企業',
+        optionB: '安定しているがお金は稼げない企業',
+        categories: ['money', 'stability']
+      });
+    }
+  };
+
+  // 志向性スコア算出
+  const calculateOrientationScore = () => {
+    const orientationMapping = {
+      'money': 'achievement',
+      'status': 'recognition', 
+      'stability': 'security',
+      'environment': 'autonomy',
+      'health': 'wellbeing',
+      'vision': 'purpose',
+      'experience': 'adventure',
+      'teamwork': 'collaboration',
+      'support': 'service',
+      'growth': 'development',
+      'innovation': 'change',
+      'creation': 'creativity',
+      'curiosity': 'learning',
+      'private': 'balance'
+    };
+
+    const scores = {};
+    selectedCategories.forEach(categoryId => {
+      const orientation = orientationMapping[categoryId];
+      const weight = importanceWeights[categoryId] || 0;
+      scores[orientation] = (scores[orientation] || 0) + weight;
+    });
+
+    return Object.entries(scores)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3);
+  };
+
+  // 進捗計算
+  const calculateProgress = () => {
+    let progress = 0;
+    if (selectedCategories.length > 0) progress += 20;
+    if (Object.keys(categoryDetails).length === selectedCategories.length) progress += 20;
+    if (Object.keys(importanceWeights).length === selectedCategories.length) progress += 20;
+    if (Object.keys(episodes).length === 7) progress += 20;
+    if (Object.keys(episodeCategories).length === 7) progress += 20;
+    return progress;
+  };
+
+  // ログイン画面
+  const LoginScreen = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <Target className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">STORY CAREER</h1>
+          <p className="text-gray-600">自己分析で理想のキャリアを見つけよう</p>
+        </div>
+
+        {currentStep === 0 ? (
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">メールアドレス</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="example@university.ac.jp"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="パスワードを入力"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              ログイン
+            </button>
+
+            <div className="text-center space-y-4">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="text-indigo-600 hover:text-indigo-800 text-sm"
+              >
+                新規登録はこちら
+              </button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">または</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  className="w-full bg-red-500 text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                  onClick={() => {
+                    setUser({ email: 'demo@gmail.com', university: 'デモ大学', progress: 0 });
+                    setCurrentScreen('dashboard');
+                  }}
+                >
+                  Googleでログイン
+                </button>
+                <button
+                  type="button"
+                  className="w-full bg-green-500 text-white py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
+                  onClick={() => {
+                    setUser({ email: 'demo@line.com', university: 'デモ大学', progress: 0 });
+                    setCurrentScreen('dashboard');
+                  }}
+                >
+                  LINEでログイン
+                </button>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">大学名</label>
+              <input
+                type="text"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="○○大学"
+                value={registerForm.university}
+                onChange={(e) => setRegisterForm({...registerForm, university: e.target.value})}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">メールアドレス</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="email"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="example@university.ac.jp"
+                  value={registerForm.email}
+                  onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">パスワード</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="パスワードを入力"
+                  value={registerForm.password}
+                  onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">パスワード確認</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="パスワードを再入力"
+                  value={registerForm.confirmPassword}
+                  onChange={(e) => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              新規登録
+            </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(0)}
+                className="text-indigo-600 hover:text-indigo-800 text-sm"
+              >
+                ログインに戻る
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+
+  // ダッシュボード画面
+  const Dashboard = () => {
+    const progress = calculateProgress();
+    
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <Target className="w-8 h-8 text-indigo-600" />
+                <h1 className="text-xl font-bold text-gray-900">STORY CAREER</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">{user?.university}</span>
+                <User className="w-8 h-8 text-gray-400 bg-gray-100 rounded-full p-2" />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">自己分析の進捗</h2>
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+              <div 
+                className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+                style={{width: `${progress}%`}}
+              />
+            </div>
+            <p className="text-sm text-gray-600">{progress}% 完了</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div 
+              className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setCurrentScreen('categorySelection')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <BarChart3 className="w-8 h-8 text-indigo-600" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">軸の選択</h3>
+              <p className="text-sm text-gray-600">あなたの価値観を表す軸を選択してください</p>
+              {selectedCategories.length > 0 && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    {selectedCategories.length}/5 選択済み
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => selectedCategories.length > 0 && setCurrentScreen('detailSelection')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <BookOpen className="w-8 h-8 text-indigo-600" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">詳細・理由の選択</h3>
+              <p className="text-sm text-gray-600">各軸に対する具体的な考えを選択してください</p>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => Object.keys(categoryDetails).length === selectedCategories.length && setCurrentScreen('importanceWeighting')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <Star className="w-8 h-8 text-indigo-600" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">重要度の設定</h3>
+              <p className="text-sm text-gray-600">各軸の重要度を設定してください</p>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setCurrentScreen('episodeInput')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <Award className="w-8 h-8 text-indigo-600" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">エピソード入力</h3>
+              <p className="text-sm text-gray-600">あなたの経験を具体的に記入してください</p>
+            </div>
+
+            <div 
+              className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => progress === 100 && setCurrentScreen('orientationResult')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <TrendingUp className="w-8 h-8 text-indigo-600" />
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">志向性の確認</h3>
+              <p className="text-sm text-gray-600">あなたの志向性スコアを確認してください</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // カテゴリ選択画面
+  const CategorySelection = () => (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={() => setCurrentScreen('dashboard')}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">軸の選択</h1>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">あなたの価値観を表す軸を最大5つ選択してください</h2>
+          <p className="text-sm text-gray-600 mb-4">選択した順番が優先度になります（{selectedCategories.length}/5）</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {CATEGORIES.map((category) => {
+            const isSelected = selectedCategories.includes(category.id);
+            const priority = selectedCategories.indexOf(category.id) + 1;
+            
+            return (
+              <div
+                key={category.id}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  isSelected 
+                    ? 'border-indigo-500 bg-indigo-50' 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => handleCategorySelect(category.id)}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                  {isSelected && (
+                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{priority}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">
+                  {category.items[0]}など{category.items.length}項目
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {selectedCategories.length > 0 && (
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => setCurrentScreen('detailSelection')}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+            >
+              次へ進む
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // 詳細選択画面
+  const DetailSelection = () => {
+    const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+    const currentCategory = CATEGORIES.find(cat => cat.id === selectedCategories[currentCategoryIndex]);
+    const currentDetail = categoryDetails[selectedCategories[currentCategoryIndex]];
+
+    const handleNext = () => {
+      if (currentCategoryIndex < selectedCategories.length - 1) {
+        setCurrentCategoryIndex(currentCategoryIndex + 1);
+      } else {
+        setCurrentScreen('importanceWeighting');
+      }
+    };
+
+    const handlePrev = () => {
+      if (currentCategoryIndex > 0) {
+        setCurrentCategoryIndex(currentCategoryIndex - 1);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setCurrentScreen('categorySelection')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900">詳細・理由の選択</h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">{currentCategory?.name}</h2>
+              <span className="text-sm text-gray-500">
+                {currentCategoryIndex + 1} / {selectedCategories.length}
+              </span>
+            </div>
+            
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">具体的な詳細を選択してください</h3>
+              <div className="space-y-3">
+                {currentCategory?.items.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      currentDetail?.detail === item
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => handleDetailSelect(selectedCategories[currentCategoryIndex], item, currentDetail?.reason || '')}
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {currentDetail?.detail && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">選択理由を選んでください</h3>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {REASONS.map((reason, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        currentDetail?.reason === reason
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleDetailSelect(selectedCategories[currentCategoryIndex], currentDetail.detail, reason)}
+                    >
+                      <span className="text-sm">{reason}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <button
+                onClick={handlePrev}
+                disabled={currentCategoryIndex === 0}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!currentDetail?.detail || !currentDetail?.reason}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {currentCategoryIndex === selectedCategories.length - 1 ? '完了' : '次へ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 重要度設定画面
+  const ImportanceWeighting = () => {
+    const totalWeight = Object.values(importanceWeights).reduce((sum, weight) => sum + weight, 0);
+    const remainingWeight = 100 - totalWeight;
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setCurrentScreen('detailSelection')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900">重要度の設定</h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">各軸の重要度を設定してください</h2>
+            <p className="text-gray-600 mb-6">
+              合計が100になるように調整してください（現在: {totalWeight}/100）
+              {remainingWeight > 0 && <span className="text-red-600"> 残り: {remainingWeight}</span>}
+            </p>
+
+            <div className="space-y-6">
+              {selectedCategories.map((categoryId) => {
+                const category = CATEGORIES.find(cat => cat.id === categoryId);
+                const weight = importanceWeights[categoryId] || 0;
+                
+                return (
+                  <div key={categoryId} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">{category?.name}</h3>
+                      <span className="text-lg font-bold text-indigo-600">{weight}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={weight}
+                      onChange={(e) => handleImportanceChange(categoryId, parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>0%</span>
+                      <span>50%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {totalWeight === 100 && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={() => {
+                    performConsistencyCheck();
+                    setCurrentScreen('episodeInput');
+                  }}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  次へ進む
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // エピソード入力画面
+  const EpisodeInput = () => {
+    const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+    const currentEpisode = EPISODES[currentEpisodeIndex];
+    const currentEpisodeContent = episodes[currentEpisode.id] || '';
+    const currentEpisodeCategory = episodeCategories[currentEpisode.id];
+
+    const handleNext = () => {
+      if (currentEpisodeIndex < EPISODES.length - 1) {
+        setCurrentEpisodeIndex(currentEpisodeIndex + 1);
+      } else {
+        setCurrentScreen('orientationResult');
+      }
+    };
+
+    const handlePrev = () => {
+      if (currentEpisodeIndex > 0) {
+        setCurrentEpisodeIndex(currentEpisodeIndex - 1);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setCurrentScreen('importanceWeighting')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900">エピソード入力</h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">{currentEpisode.title}</h2>
+              <span className="text-sm text-gray-500">
+                {currentEpisodeIndex + 1} / {EPISODES.length}
+              </span>
+            </div>
+
+            <p className="text-gray-600 mb-6">{currentEpisode.description}</p>
+
+            <div className="mb-6">
+              <textarea
+                className="w-full h-32 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                placeholder="エピソードを詳しく記入してください..."
+                value={currentEpisodeContent}
+                onChange={(e) => handleEpisodeChange(currentEpisode.id, e.target.value)}
+              />
+            </div>
+
+            {currentEpisodeContent && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">このエピソードに関連する軸を選択してください</h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {selectedCategories.map((categoryId) => {
+                    const category = CATEGORIES.find(cat => cat.id === categoryId);
+                    return (
+                      <div
+                        key={categoryId}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          currentEpisodeCategory === categoryId
+                            ? 'border-indigo-500 bg-indigo-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => handleEpisodeCategoryLink(currentEpisode.id, categoryId)}
+                      >
+                        {category?.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between">
+              <button
+                onClick={handlePrev}
+                disabled={currentEpisodeIndex === 0}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!currentEpisodeContent || !currentEpisodeCategory}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {currentEpisodeIndex === EPISODES.length - 1 ? '完了' : '次へ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 志向性結果画面
+  const OrientationResult = () => {
+    const topOrientations = calculateOrientationScore();
+    
+    const orientationLabels = {
+      'achievement': '成果志向',
+      'recognition': '承認志向',
+      'security': '安定志向',
+      'autonomy': '自律志向',
+      'wellbeing': '健康志向',
+      'purpose': '目的志向',
+      'adventure': '冒険志向',
+      'collaboration': '協調志向',
+      'service': '奉仕志向',
+      'development': '成長志向',
+      'change': '変革志向',
+      'creativity': '創造志向',
+      'learning': '学習志向',
+      'balance': 'バランス志向'
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setCurrentScreen('dashboard')}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900">あなたの志向性</h1>
+            </div>
+          </div>
+        </header>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            <div className="text-center mb-8">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">自己分析が完了しました！</h2>
+              <p className="text-gray-600">あなたの上位3つの志向性をご確認ください</p>
+            </div>
+
+            <div className="space-y-6">
+              {topOrientations.map(([orientation, score], index) => (
+                <div key={orientation} className="flex items-center p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+                  <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-6">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {orientationLabels[orientation] || orientation}
+                    </h3>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-indigo-600 h-2 rounded-full"
+                        style={{width: `${(score / Math.max(...topOrientations.map(([,s]) => s))) * 100}%`}}
+                      />
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">スコア: {score}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 text-center space-y-4">
+              <button
+                onClick={() => setCurrentScreen('dashboard')}
+                className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              >
+                ダッシュボードに戻る
+              </button>
+              <p className="text-sm text-gray-500">
+                この結果は企業とのマッチングに活用されます
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // メイン画面レンダリング
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case 'login':
+        return <LoginScreen />;
+      case 'dashboard':
+        return <Dashboard />;
+      case 'categorySelection':
+        return <CategorySelection />;
+      case 'detailSelection':
+        return <DetailSelection />;
+      case 'importanceWeighting':
+        return <ImportanceWeighting />;
+      case 'episodeInput':
+        return <EpisodeInput />;
+      case 'orientationResult':
+        return <OrientationResult />;
+      default:
+        return <LoginScreen />;
+    }
+  };
+
+  return (
+    <div className="app">
+      {renderCurrentScreen()}
+    </div>
+  );
+};
+
+export default SelfAnalysisApp;
